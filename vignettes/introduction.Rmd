@@ -1,5 +1,5 @@
 ---
-title: "introduction"
+title: "Introduction to Celmod"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{introduction}
@@ -18,18 +18,32 @@ knitr::opts_chunk$set(
 library(Celmod)
 ```
 
-```{r, include = FALSE}
-###1) Examine format of pre-loaded bulk data and proportion files
+## Overview
+This workflow briefly outlines the main steps in using Celmod to create and apply a model for estimating cell type proportions from bulk data
+
+### 1) Examine format of pre-loaded bulk data and proportion files
+```{r}
 bdat_initial[1:5,1:5]
 classprops_initial[,1:5]
-
-###2) Train Celmod with initial files
-model1=train_model(bdat_initial,classprops_initial,numgenevec=3:10,crossval_times=5,seedval=1,method.type="pearson",quantileval=0.9)
-
-###3) Run Celmod-trained model on an expression matrix - here, re-input the original training matrix as an example
-out1=predict_estimates(model1,bdat_initial,method="pearson")
-
-###4) Examine output of predicted proportion files, with first parameter value:
-out1$proportions[[1]][,1:5]
 ```
 
+### 2) Train Celmod with initial files
+```{r}
+model1=train_model(bdat_initial,classprops_initial,numgenevec=3:10,crossval_times=5,seedval=1,method_type ="pearson",quantileval=0.9)
+```
+
+### 3) Run Celmod-trained model on an expression matrix - here, re-input the original training matrix as an example.
+Note that for an actual run, the training, test, and holdout sets would be non-overlapping as far as possible
+```{r}
+out1=predict_estimates(model1,bdat_initial)
+```
+
+### 4) Examine output of predicted proportion files, with sixth parameter value:
+```{r}
+out1$proportions[[6]][,1:5]
+```
+
+### 5) As an example, plot predicted and actual proportions of cell type 1 with sixth parameter value:
+```{r}
+plot(classprops_initial[1,],out1$proportions[[6]][1,],pch=19,xlab="Actual proportion",ylab="Predicted proportion")
+```
