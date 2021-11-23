@@ -1,0 +1,23 @@
+Package: Celmod
+Title: Estimate cell type proportions from bulk data after training on matched bulk and single-cell data
+Version: 0.0.0.9000
+Authors@R: 
+    person(given = "Vilas",
+           family = "Menon",
+           role = c("aut", "cre"),
+           email = "vm2545@cumc.columbia.edu",
+           comment = c(ORCID = "0000-0002-4096-8601"))
+Description: This package trains a model using matched bulk molecular data and single-cell proportion data, which can then be used to estimate cell type proportions from additional bulk samples. Because the training runs on direct fitting of matched data, there are no restrictions on the data modalities for bulk (RNA-seq, proteomics, metabolomics) and single-cell (single-cell/nucleus RNA-seq, FACS, Immunohistochemistry/In situ hybridization) - this allows for flexibility in predicting across disparate data modalities, so long as there are a sufficient number of matched samples.
+Imports:
+	glmnet (>= 1.9.4)
+License: `use_gpl3_license()` 
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.1.2
+Suggests: 
+    rmarkdown,
+    knitr
+VignetteBuilder: knitr
+Depends: 
+    R (>= 2.10)

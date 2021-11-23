@@ -1,0 +1,35 @@
+---
+title: "introduction"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{introduction}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(Celmod)
+```
+
+```{r, include = FALSE}
+###1) Examine format of pre-loaded bulk data and proportion files
+bdat_initial[1:5,1:5]
+classprops_initial[,1:5]
+
+###2) Train Celmod with initial files
+model1=train_model(bdat_initial,classprops_initial,numgenevec=3:10,crossval_times=5,seedval=1,method.type="pearson",quantileval=0.9)
+
+###3) Run Celmod-trained model on an expression matrix - here, re-input the original training matrix as an example
+out1=predict_estimates(model1,bdat_initial,method="pearson")
+
+###4) Examine output of predicted proportion files, with first parameter value:
+out1$proportions[[1]][,1:5]
+```
+
