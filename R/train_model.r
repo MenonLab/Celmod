@@ -11,7 +11,6 @@
 #` @param alphavals A vector of values for the alpha parameter for Elastic Net, over which the model will optimize using cross-validation
 #' @return A list containing the following arrays: "cv_preds" with the cross-validation predictions for each value of the numgenevec or alphavals parameter, "cv_errs" with the cross-validation errors for each value of the numgenevec or alphavals parameter, "numgenevec" with the range of best-fit features tested, "cv_bestgenes" with the top features selected for each value of the numgenevec or alphavals parameter, "model" for the trained model, and "modelgenerank" for the final ranking of features used in the model trained on the full data
 #' @export
-
 train_model=function(bdat,classprops,numgenevec=3:10,crossval_times=5,seedval=1,method_type="pearson",quantileval=0.9,alphavals=seq(from=0,to=1,length.out=11)) {
   ###select training set for CV###
   keepcells=rep(1:crossval_times,length.out=ncol(bdat))
