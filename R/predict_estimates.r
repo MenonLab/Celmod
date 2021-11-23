@@ -29,15 +29,15 @@ predict_estimates=function(model_list,bdat,typval="pearson") {
     }
   } else {
     outpred=list()
-    for (typ in 1:nrow(classprops)) {
+    for (typ in 1:length(model_list$model)) {
       predval=sweep(sweep(bdat[,traininds,drop=F],1,model_list$model[[typ]][1,],"-"),1,model_list$model[[typ]][2,],"/")
       predval[predval<0]=0
       predval[predval>1]=1
       outpred[[typ]]=predval
     }
     for (keepgen in 1:length(numgenevec)) {
-      predmat=matrix(0,nrow=nrow(classprops),ncol=length(traininds))
-      for (typ in 1:nrow(classprops)) {
+      predmat=matrix(0,nrow=length(model_list$model),ncol=length(traininds))
+      for (typ in 1:length(model_list$model)) {
         predmat[typ,]=apply(outpred[[typ]][model_list$modelgenerank[1:numgenevec[keepgen],typ],],2,function(x){return(mean(x,na.rm=T))})
       }
       rownames(predmat)=rownames(model_list$cv_preds[[1]])
