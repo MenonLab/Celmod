@@ -5,13 +5,14 @@
 #' @param bdat Matrix of bulk data, with features (genes, proteins, metabolites) as rows and samples as columns.
 #' @param classprops Matrix of cell type proportions, with each cell type as a row, and each sample as column. The sample ordering must match those in the bdat bulk matrix.
 #' @param numgenevec A vector with range of the number of best-fit features to optimize the model over. Usually 10-20 features is sufficient to model ~10 different cell types
-#` @param crossval_times Number of cross-validations to run. For example, crossval_times=5 equates to five-fold cross-validation
-#` @param method_type One of "pearson", "spearman", "quantile", or "elasticnet". This parameter determines which fitting model/error function to use. "pearson" uses the Pearson's R to determine the optimal number of features to use, "spearman" uses the Spearman's R, and "quantile" uses a quantile value to identify the max error. "elasticnet" uses an Elastic Net approach for modeling.
-#` @param quantileval A parameter to set the quantile value of the max error, if using the "quantile" method
-#` @param alphavals A vector of values for the alpha parameter for Elastic Net, over which the model will optimize using cross-validation
+#' @param crossval_times Number of cross-validations to run. For example, crossval_times=5 equates to five-fold cross-validation
+#' @param method_type One of "pearson", "spearman", "quantile", or "elasticnet". This parameter determines which fitting model/error function to use. "pearson" uses the Pearson's R to determine the optimal number of features to use, "spearman" uses the Spearman's R, and "quantile" uses a quantile value to identify the max error. "elasticnet" uses an Elastic Net approach for modeling.
+#' @param quantileval A parameter to set the quantile value of the max error, if using the "quantile" method
+#' @param alphavals A vector of values for the alpha parameter for Elastic Net, over which the model will optimize using cross-validation
+#' @param normalize_props Switch to return proportion values between 0 and 1 (TRUE) or unbounded (FALSE). Unbounded proportion predictions are only useful for correlation analyses downstream, since their range will vary outside of [0,1] 
 #' @return A list containing the following arrays: "cv_preds" with the cross-validation predictions for each value of the numgenevec or alphavals parameter, "cv_errs" with the cross-validation errors for each value of the numgenevec or alphavals parameter, "numgenevec" with the range of best-fit features tested, "cv_bestgenes" with the top features selected for each value of the numgenevec or alphavals parameter, "model" for the trained model, and "modelgenerank" for the final ranking of features used in the model trained on the full data
 #' @export
-train_model=function(bdat,classprops,numgenevec=3:10,crossval_times=5,seedval=1,method_type="pearson",quantileval=0.9,alphavals=seq(from=0,to=1,length.out=11)) {
+train_model=function(bdat,classprops,numgenevec=3:10,crossval_times=5,seedval=1,method_type="pearson",quantileval=0.9,alphavals=seq(from=0,to=1,length.out=11),normalize_props=T) {
   ###select training set for CV###
   keepcells=rep(1:crossval_times,length.out=ncol(bdat))
   set.seed(seedval)
@@ -73,13 +74,17 @@ train_model=function(bdat,classprops,numgenevec=3:10,crossval_times=5,seedval=1,
       for (typ in 1:nrow(classprops)) {
         y=apply(bdat[,traininds],1,function(x){outval=summary(lm(x~classprops[typ,traininds]))$coefficients;return(c(outval[1,1],outval[2,1]))})
         allmods[[typ]]=y
-        predval=sweep(sweep(bdat[,traininds,drop=F],1,allmods[[typ]][1,],"-"),1,allmods[[typ]][2,],"/")
-        predval[predval<0]=0
-        predval[predval>1]=1
+		predval=sweep(sweep(bdat[,traininds,drop=F],1,allmods[[typ]][1,],"-"),1,allmods[[typ]][2,],"/")
+		if (normalize_props) {
+			predval[predval<0]=0
+			predval[predval>1]=1
+		}
         trainpred[[typ]]=predval
         predval=sweep(sweep(bdat[,testinds,drop=F],1,allmods[[typ]][1,],"-"),1,allmods[[typ]][2,],"/")
-        predval[predval<0]=0
-        predval[predval>1]=1
+		if (normalize_props) {
+			predval[predval<0]=0
+			predval[predval>1]=1
+		}
         testpred[[typ]]=predval
       }
       ###order genes by fit for each type
@@ -105,8 +110,9 @@ train_model=function(bdat,classprops,numgenevec=3:10,crossval_times=5,seedval=1,
         for (typ in 1:nrow(classprops)) {
           predmat[typ,]=apply(testpred[[typ]][traingene_rank[1:numgenevec[keepgen],typ],,drop=F],2,function(x){return(mean(x,na.rm=T))})
         }
-        predmat=sweep(predmat,2,colSums(predmat),"/")
-        
+		if (normalize_props) {
+			predmat=sweep(predmat,2,colSums(predmat),"/")
+        }
         cv_preds[[keepgen]][,testinds]=predmat
         rownames(cv_preds[[keepgen]])=rownames(classprops)
       }
@@ -137,9 +143,11 @@ train_model=function(bdat,classprops,numgenevec=3:10,crossval_times=5,seedval=1,
       y=apply(bdat[,traininds],1,function(x){outval=summary(lm(x~classprops[typ,traininds]))$coefficients;return(c(outval[1,1],outval[2,1]))})
       allmods[[typ]]=y
       predval=sweep(sweep(bdat[,traininds,drop=F],1,allmods[[typ]][1,],"-"),1,allmods[[typ]][2,],"/")
-      predval[predval<0]=0
-      predval[predval>1]=1
-      trainpred[[typ]]=predval
+      if (normalize_props) {
+		predval[predval<0]=0
+		predval[predval>1]=1
+      }
+	  trainpred[[typ]]=predval
     }
     ###order genes by fit for each type
     traingene_rank=c()
