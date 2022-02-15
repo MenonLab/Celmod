@@ -20,7 +20,7 @@ train_model=function(bdat,classprops,numgenevec=3:10,crossval_times=5,seedval=1,
   keepcells=sample(keepcells)
   cv_preds=list()
   if (usesqrt) {
-	bdat=sqrt(classprops)
+	classprops=sqrt(classprops)
   }
   if (method_type=="elasticnet") {
     bdat=t(bdat)
