@@ -10,14 +10,18 @@
 #' @param quantileval A parameter to set the quantile value of the max error, if using the "quantile" method
 #' @param alphavals A vector of values for the alpha parameter for Elastic Net, over which the model will optimize using cross-validation
 #' @param normalize_props Switch to return proportion values between 0 and 1 (TRUE) or unbounded (FALSE). Unbounded proportion predictions are only useful for correlation analyses downstream, since their range will vary outside of [0,1] 
+#' @param usesqrt For certain applications, it is better to train on the square roots of the proportions, so setting this flag to TRUE fits the square root of the proportion values (while still assuring that the actual proportions sum to 1)
 #' @return A list containing the following arrays: "cv_preds" with the cross-validation predictions for each value of the numgenevec or alphavals parameter, "cv_errs" with the cross-validation errors for each value of the numgenevec or alphavals parameter, "numgenevec" with the range of best-fit features tested, "cv_bestgenes" with the top features selected for each value of the numgenevec or alphavals parameter, "model" for the trained model, and "modelgenerank" for the final ranking of features used in the model trained on the full data
 #' @export
-train_model=function(bdat,classprops,numgenevec=3:10,crossval_times=5,seedval=1,method_type="pearson",quantileval=0.9,alphavals=seq(from=0,to=1,length.out=11),normalize_props=T) {
+train_model=function(bdat,classprops,numgenevec=3:10,crossval_times=5,seedval=1,method_type="pearson",quantileval=0.9,alphavals=seq(from=0,to=1,length.out=11),normalize_props=TRUE, usesqrt=FALSE) {
   ###select training set for CV###
   keepcells=rep(1:crossval_times,length.out=ncol(bdat))
   set.seed(seedval)
   keepcells=sample(keepcells)
   cv_preds=list()
+  if (usesqrt) {
+	bdat=sqrt(classprops)
+  }
   if (method_type=="elasticnet") {
     bdat=t(bdat)
     allcombs=expand.grid(alphavals,1:100)
@@ -111,6 +115,9 @@ train_model=function(bdat,classprops,numgenevec=3:10,crossval_times=5,seedval=1,
           predmat[typ,]=apply(testpred[[typ]][traingene_rank[1:numgenevec[keepgen],typ],,drop=F],2,function(x){return(mean(x,na.rm=T))})
         }
 		if (normalize_props) {
+			if (usesqrt) {
+				predmat=predmat^2
+			}
 			predmat=sweep(predmat,2,colSums(predmat),"/")
         }
         cv_preds[[keepgen]][,testinds]=predmat
