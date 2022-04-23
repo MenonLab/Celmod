@@ -46,7 +46,9 @@ predict_estimates=function(model_list,bdat,typval="pearson",normalize_props=TRUE
 			predmat=predmat^2
 		}
 		outprop[["proportions"]][[keepgen]]=sweep(predmat,2,colSums(predmat),"/")
-	  }
+      } else {
+	      	outprop[["proportions"]][[keepgen]]=predmat
+      }
     }
   }
   return(outprop)
